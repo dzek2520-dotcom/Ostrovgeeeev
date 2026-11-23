@@ -1,0 +1,12 @@
+# Render Blueprint: один бесплатный Web Service (HTTP + WebSocket на одном порту)
+services:
+  - type: web
+    name: island-of-chaos
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: 20

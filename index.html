@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<!--
+  index.html — разметка всех экранов игры ISLAND OF CHAOS.
+  Экраны: подключение к серверу, главное меню, лобби, игра (canvas + HUD), итоги раунда.
+  Видимостью экранов управляет public/js/ui.js (класс .active). Все тексты — через data-i18n.
+-->
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#0b1a2b">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>Остров Хаоса — ISLAND OF CHAOS</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🌋%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ═══ Подключение к серверу ═══ -->
+<section id="screen-connect" class="screen active">
+  <div class="card center">
+    <div class="logo">🌋</div>
+    <h1 data-i18n="app.title">Остров Хаоса</h1>
+    <h2 data-i18n="connect.title">Подключение к серверу…</h2>
+    <div class="spinner"></div>
+    <p id="connectAttempt" class="muted"></p>
+    <p id="connectElapsed" class="muted"></p>
+    <p class="hint" data-i18n="connect.hint"></p>
+    <button id="connectRetry" class="btn hidden" data-i18n="connect.retry">Повторить</button>
+  </div>
+</section>
+
+<!-- ═══ Главное меню ═══ -->
+<section id="screen-menu" class="screen">
+  <div class="card">
+    <div class="top-tools">
+      <button id="langBtn" class="chip" title="RU / EN">RU</button>
+      <button id="soundBtnMenu" class="chip" data-sound-toggle>🔊</button>
+    </div>
+    <div class="logo">🌋</div>
+    <h1 data-i18n="app.title">Остров Хаоса</h1>
+    <p class="tagline" data-i18n="app.tagline"></p>
+
+    <label class="lbl" for="nameInput" data-i18n="menu.name">Ваш ник</label>
+    <input id="nameInput" class="inp" maxlength="16" autocomplete="off" data-i18n-ph="menu.name.ph" placeholder="Введите ник">
+
+    <label class="lbl" data-i18n="menu.color">Цвет персонажа</label>
+    <div id="colorPalette" class="palette"></div>
+
+    <div class="row">
+      <button id="btnCreate" class="btn primary" data-i18n="menu.create">Создать комнату</button>
+      <button id="btnQuick" class="btn" data-i18n="menu.quick">Быстрый поиск</button>
+    </div>
+    <div class="row">
+      <input id="codeInput" class="inp code" maxlength="4" autocomplete="off" autocapitalize="characters" data-i18n-ph="menu.code.ph" placeholder="КОД">
+      <button id="btnJoin" class="btn" data-i18n="menu.join">Войти</button>
+    </div>
+    <p id="menuError" class="error"></p>
+    <p id="menuHelp" class="hint"></p>
+  </div>
+</section>
+
+<!-- ═══ Лобби ═══ -->
+<section id="screen-lobby" class="screen">
+  <div class="card wide">
+    <div class="lobby-head">
+      <div>
+        <div class="muted" data-i18n="lobby.code">Код комнаты</div>
+        <div id="lobbyCode" class="roomcode">----</div>
+      </div>
+      <div class="col">
+        <button id="btnCopy" class="btn small" data-i18n="lobby.copy">Копировать код</button>
+        <button id="btnCopyLink" class="btn small" data-i18n="lobby.copylink">Копировать ссылку</button>
+      </div>
+    </div>
+
+    <div class="lobby-body">
+      <div class="lobby-col">
+        <h3><span data-i18n="lobby.players">Игроки</span> <span id="lobbyCount" class="muted"></span></h3>
+        <ul id="lobbyPlayers" class="plist"></ul>
+        <h3 data-i18n="lobby.settings">Настройки комнаты</h3>
+        <label class="check"><input type="checkbox" id="optPvp"> <span data-i18n="lobby.pvp">PvP</span></label>
+        <label class="check"><input type="checkbox" id="optChaos"> <span data-i18n="lobby.chaos">Режим «Хаос»</span></label>
+        <p id="lobbyHostOnly" class="hint" data-i18n="lobby.hostonly"></p>
+      </div>
+      <div class="lobby-col">
+        <h3>💬</h3>
+        <div id="lobbyChatLog" class="chatlog"></div>
+        <form id="lobbyChatForm" class="row" autocomplete="off">
+          <input id="lobbyChatInput" class="inp" maxlength="140" data-i18n-ph="chat.ph" placeholder="Сообщение…">
+          <button class="btn small" data-i18n="chat.send">Отправить</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="row">
+      <button id="btnReady" class="btn" data-i18n="lobby.ready">Готов</button>
+      <button id="btnStart" class="btn primary" data-i18n="lobby.start">Старт</button>
+      <button id="btnLeaveLobby" class="btn danger" data-i18n="lobby.leave">Выйти</button>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ Игра ═══ -->
+<section id="screen-game" class="screen">
+  <canvas id="game"></canvas>
+  <div id="blindOverlay" class="blind"></div>
+
+  <!-- HUD: показатели -->
+  <div id="hud" class="hud">
+    <div class="bar" id="barHp"><i></i><span>❤️</span><b></b></div>
+    <div class="bar" id="barHunger"><i></i><span>🍖</span><b></b></div>
+    <div class="bar" id="barThirst"><i></i><span>💧</span><b></b></div>
+    <div class="bar" id="barStamina"><i></i><span>⚡</span><b></b></div>
+    <div class="bar" id="barSanity"><i></i><span>🧠</span><b></b></div>
+    <div id="tempBox" class="temp">🌡️ <b id="tempVal">36.6</b>°</div>
+    <div id="statuses" class="statuses"></div>
+    <div id="protBox" class="prot"></div>
+  </div>
+
+  <!-- Таймер и баннеры катаклизмов -->
+  <div class="topmid">
+    <div id="nextTimer" class="next"></div>
+    <div id="banners" class="banners"></div>
+  </div>
+
+  <!-- Правый верхний угол: миникарта и кнопки -->
+  <div class="topright">
+    <canvas id="minimap" width="128" height="128"></canvas>
+    <div class="row tight">
+      <button id="soundBtnGame" class="chip" data-sound-toggle>🔊</button>
+      <button id="btnLeaveGame" class="chip" data-i18n-title="hud.leave" title="Выйти">🚪</button>
+    </div>
+    <div id="pingBox" class="muted small"></div>
+  </div>
+
+  <!-- Лента событий и чат -->
+  <div id="eventLog" class="eventlog"></div>
+  <div id="gameChat" class="gamechat"></div>
+  <form id="chatForm" class="chatform hidden" autocomplete="off">
+    <input id="chatInput" class="inp" maxlength="140" data-i18n-ph="chat.ph" placeholder="Сообщение…">
+  </form>
+
+  <!-- Панели -->
+  <div id="invPanel" class="panel hidden">
+    <div class="panel-head"><h3 data-i18n="inv.title">Инвентарь</h3><button class="chip" data-close="invPanel">✕</button></div>
+    <p class="hint" data-i18n="inv.hint"></p>
+    <div id="invList" class="grid"></div>
+  </div>
+  <div id="craftPanel" class="panel hidden">
+    <div class="panel-head"><h3 data-i18n="craft.title">Крафт и стройка</h3><button class="chip" data-close="craftPanel">✕</button></div>
+    <div id="craftList" class="craftlist"></div>
+  </div>
+  <div id="emotePanel" class="panel emotes hidden"></div>
+
+  <!-- Наблюдение после смерти -->
+  <div id="specBar" class="specbar hidden">
+    <button id="specPrev" class="chip">◀</button>
+    <div><b data-i18n="spec.dead">Вы погибли</b><div id="specName" class="muted small"></div></div>
+    <button id="specNext" class="chip">▶</button>
+  </div>
+
+  <!-- Мобильное управление -->
+  <div id="touch" class="touch hidden">
+    <div id="joy" class="joy"><div id="joyKnob" class="knob"></div></div>
+    <div class="tbtns">
+      <button class="tb big" data-act="interact">✋</button>
+      <button class="tb big" data-act="attack">⚔️</button>
+      <button class="tb" data-act="sprint">⚡</button>
+      <button class="tb" data-act="craft">🔨</button>
+      <button class="tb" data-act="inv">🎒</button>
+      <button class="tb" data-act="heal">🩹</button>
+      <button class="tb" data-act="emote">😀</button>
+      <button class="tb" data-act="chat">💬</button>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ Итоги ═══ -->
+<section id="screen-results" class="screen">
+  <div class="card wide">
+    <h1 data-i18n="results.title">Итоги раунда</h1>
+    <h2 id="resWinner"></h2>
+    <p id="resDuration" class="muted"></p>
+    <div class="tablewrap">
+      <table class="table">
+        <thead><tr>
+          <th data-i18n="results.rank">#</th><th data-i18n="results.player">Игрок</th><th data-i18n="results.time">Время</th>
+          <th data-i18n="results.alive">Статус</th><th data-i18n="results.res">Ресурсы</th>
+          <th data-i18n="results.surv">Выживание</th><th data-i18n="results.help">Помощь</th><th data-i18n="results.kills">Убийства</th>
+        </tr></thead>
+        <tbody id="resBody"></tbody>
+      </table>
+    </div>
+    <div class="row">
+      <button id="btnRematch" class="btn primary" data-i18n="results.rematch">Реванш</button>
+      <button id="btnResLeave" class="btn" data-i18n="results.leave">В главное меню</button>
+    </div>
+    <p id="resWait" class="hint hidden" data-i18n="results.wait"></p>
+  </div>
+</section>
+
+<div id="toasts" class="toasts"></div>
+<div id="connBanner" class="connbanner hidden"></div>
+
+<script type="module" src="main.js"></script>
+</body>
+</html>
